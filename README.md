@@ -6,14 +6,21 @@ Smart heatwave surveillance and advisory system for Indian regions.
 - `/client` - React frontend (Vite)
 - `/server` - Express API backend (Open-Meteo & NASA POWER integration)
 
-## Deploying on Vercel
+## Render Deployment Settings (Backend)
 
-### Option 1: Monorepo Deployment (Frontend + Backend on single Vercel project)
-The repository includes a `vercel.json` configuration. Simply import the repository on Vercel root and deploy. The backend serverless endpoints will be served directly at `/api/*`.
+When creating a **Web Service** on [Render.com](https://render.com):
 
-### Option 2: Separate Backend Deployment
-If deploying the backend separately (e.g., Render, Railway, Vercel Serverless Function):
-Set the environment variable `VITE_API_BASE_URL` in your Vercel frontend project settings:
-```
-VITE_API_BASE_URL=https://your-backend-url.com
-```
+- **Environment**: `Node`
+- **Root Directory**: `server`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start` (or `node src/index.js`)
+
+Or simply use the included Blueprint by selecting **New -> Blueprint** and connecting your repository (`render.yaml` will configure everything automatically).
+
+## Vercel Deployment Settings (Frontend)
+
+1. Deploy the `/client` directory on Vercel or point the Vercel Root Directory to `client`.
+2. Add Environment Variable in Vercel settings:
+   ```
+   VITE_API_BASE_URL=https://<your-render-backend-name>.onrender.com
+   ```
