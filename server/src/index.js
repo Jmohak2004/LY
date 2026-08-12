@@ -20,27 +20,41 @@ async function fetchJson(url, options = {}) {
   return response.json();
 }
 
+const REGION_COORDINATES = {
+  'Delhi NCR, India': { latitude: 28.6139, longitude: 77.209 },
+  'Jaipur, Rajasthan, India': { latitude: 26.9124, longitude: 75.7873 },
+  'Nagpur, Maharashtra, India': { latitude: 21.1458, longitude: 79.0882 }
+};
+
 async function getCoordinates(query) {
-  const url = new URL('https://nominatim.openstreetmap.org/search');
-  url.searchParams.set('q', query);
-  url.searchParams.set('format', 'jsonv2');
-  url.searchParams.set('limit', '1');
-
-  const data = await fetchJson(url.toString(), {
-    headers: {
-      'User-Agent': 'SuryaRakshak/1.0 (local-dev)'
-    }
-  });
-
-  const first = data[0];
-  if (!first) {
-    throw new Error(`No coordinates found for ${query}`);
+  if (REGION_COORDINATES[query]) {
+    return REGION_COORDINATES[query];
   }
 
-  return {
-    latitude: Number(first.lat),
-    longitude: Number(first.lon)
-  };
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('q', query);
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('limit', '1');
+
+    const data = await fetchJson(url.toString(), {
+      headers: {
+        'User-Agent': 'SuryaRakshak-Heatwave-Monitor/1.0 (https://github.com/Jmohak2004/LY)'
+      }
+    });
+
+    const first = data[0];
+    if (first) {
+      return {
+        latitude: Number(first.lat),
+        longitude: Number(first.lon)
+      };
+    }
+  } catch (err) {
+    console.warn(`Geocoding failed for ${query}, using default:`, err.message);
+  }
+
+  return { latitude: 28.6139, longitude: 77.209 };
 }
 
 async function getWeatherSnapshot(latitude, longitude) {
@@ -55,20 +69,25 @@ async function getWeatherSnapshot(latitude, longitude) {
 }
 
 async function getNasaPowerSnapshot(latitude, longitude) {
-  const start = new Date();
-  const end = new Date();
-  const startString = start.toISOString().slice(0, 10).replace(/-/g, '');
-  const endString = end.toISOString().slice(0, 10).replace(/-/g, '');
-  const url = new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-  url.searchParams.set('parameters', 'T2M_MAX,T2M_MIN,ALLSKY_SFC_SW_DWN');
-  url.searchParams.set('community', 'RE');
-  url.searchParams.set('longitude', longitude.toString());
-  url.searchParams.set('latitude', latitude.toString());
-  url.searchParams.set('start', startString);
-  url.searchParams.set('end', endString);
-  url.searchParams.set('format', 'JSON');
+  try {
+    const start = new Date();
+    const end = new Date();
+    const startString = start.toISOString().slice(0, 10).replace(/-/g, '');
+    const endString = end.toISOString().slice(0, 10).replace(/-/g, '');
+    const url = new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+    url.searchParams.set('parameters', 'T2M_MAX,T2M_MIN,ALLSKY_SFC_SW_DWN');
+    url.searchParams.set('community', 'RE');
+    url.searchParams.set('longitude', longitude.toString());
+    url.searchParams.set('latitude', latitude.toString());
+    url.searchParams.set('start', startString);
+    url.searchParams.set('end', endString);
+    url.searchParams.set('format', 'JSON');
 
-  return fetchJson(url.toString());
+    return await fetchJson(url.toString());
+  } catch (error) {
+    console.warn('NASA POWER API request failed:', error.message);
+    return null;
+  }
 }
 
 function summarizeRegion(region, openMeteoData, nasaData) {
