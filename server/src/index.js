@@ -144,8 +144,12 @@ async function buildRegionData(region) {
   );
 }
 
+import { registerExtraRoutes } from './routes.js';
+
 app.use(cors());
 app.use(express.json());
+
+registerExtraRoutes(app);
 
 app.get('/', (_request, response) => {
   response.json({ status: 'ok', message: 'SuryaRakshak API is operational', endpoints: ['/api/health', '/api/dashboard', '/api/regions'] });

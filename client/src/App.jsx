@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react';
+import {
+  ForecastPage,
+  VulnerabilityPage,
+  AdvisoriesPage,
+  ResourcesPage,
+  AnalyticsPage
+} from './Pages.jsx';
 
 function formatPercent(value) {
   return `${Math.round(value)}%`;
@@ -48,7 +55,39 @@ function MetricCard({ label, value, detail }) {
   );
 }
 
+function Navbar({ activeTab, onSelectTab }) {
+  const tabs = [
+    { id: 'dashboard', label: 'Live Monitor' },
+    { id: 'forecast', label: 'Forecast & Trends' },
+    { id: 'vulnerability', label: 'Risk Matrix' },
+    { id: 'advisories', label: 'Advisories' },
+    { id: 'resources', label: 'Cooling Centers' },
+    { id: 'analytics', label: 'Analytics' }
+  ];
+
+  return (
+    <header className="app-nav">
+      <div className="nav-brand">
+        <span className="brand-logo" />
+        <strong>SuryaRakshak</strong>
+      </div>
+      <nav className="nav-links">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => onSelectTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+    </header>
+  );
+}
+
 export default function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [dashboard, setDashboard] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState('Delhi NCR');
   const [error, setError] = useState('');
@@ -81,146 +120,161 @@ export default function App() {
     };
   }, []);
 
-  if (error) {
+  const renderContent = () => {
+    if (activeTab === 'forecast') return <ForecastPage />;
+    if (activeTab === 'vulnerability') return <VulnerabilityPage />;
+    if (activeTab === 'advisories') return <AdvisoriesPage />;
+    if (activeTab === 'resources') return <ResourcesPage />;
+    if (activeTab === 'analytics') return <AnalyticsPage />;
+
+    if (error) {
+      return (
+        <main className="page-shell center-state">
+          <h1>SuryaRakshak</h1>
+          <p>{error}</p>
+        </main>
+      );
+    }
+
+    if (!dashboard) {
+      return (
+        <main className="page-shell center-state">
+          <div className="loading-orb" />
+          <p>Loading live heat-risk intelligence...</p>
+        </main>
+      );
+    }
+
+    const regionsList = dashboard?.regions ?? [];
+    const currentRegion = regionsList.find((region) => region.name === selectedRegion) ?? regionsList[0] ?? {};
+    const alertsList = dashboard?.alerts ?? [];
+
     return (
-      <main className="page-shell center-state">
-        <h1>SuryaRakshak</h1>
-        <p>{error}</p>
-      </main>
-    );
-  }
-
-  if (!dashboard) {
-    return (
-      <main className="page-shell center-state">
-        <div className="loading-orb" />
-        <p>Loading live heat-risk intelligence...</p>
-      </main>
-    );
-  }
-
-  const regionsList = dashboard?.regions ?? [];
-  const currentRegion = regionsList.find((region) => region.name === selectedRegion) ?? regionsList[0] ?? {};
-  const alertsList = dashboard?.alerts ?? [];
-
-  return (
-    <main className="page-shell">
-      {dashboard.notifications?.length ? (
-        <section className="panel push-panel">
-          <div className="panel-header">
-            <div>
-              <span className="eyebrow">Page notifications</span>
-              <h2>Push alerts for this session</h2>
-            </div>
-            <span className="panel-note">Backend generated, no database</span>
-          </div>
-          <div className="alert-stack">
-            {dashboard.notifications.map((notification) => (
-              <article className="alert-card" key={notification.id}>
-                <SeverityPill level={notification.severity} />
-                <strong>{notification.title}</strong>
-                <p>{notification.message}</p>
-                <span>{notification.region}</span>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <span className="eyebrow">SuryaRakshak</span>
-          <h1>Smart heatwave surveillance for Indian regions.</h1>
-          <p>
-            Track thermal stress, view district-level risk, and push clear advisories to field teams, health workers,
-            and residents before heat becomes a crisis.
-          </p>
-          <div className="hero-actions">
-            <button className="primary-action">Live advisory feed</button>
-            <button className="secondary-action">Escalation matrix</button>
-          </div>
-        </div>
-
-        <div className="hero-metrics">
-          <MetricCard label="Active alerts" value={dashboard.summary?.activeAlerts ?? 0} detail="Across monitored regions" />
-          <MetricCard label="High-risk districts" value={dashboard.summary?.highRiskDistricts ?? 0} detail="Requires intervention" />
-          <MetricCard label="Average heat index" value={`${dashboard.summary?.averageHeatIndex ?? 0}°C`} detail="Regional mean" />
-        </div>
-      </section>
-
-      <section className="dashboard-grid">
-        <div className="main-column">
-          <div className="panel region-panel">
+      <main className="page-shell">
+        {dashboard.notifications?.length ? (
+          <section className="panel push-panel">
             <div className="panel-header">
               <div>
-                <span className="eyebrow">Regional watch</span>
-                <h2>Monitored locations</h2>
+                <span className="eyebrow">Page notifications</span>
+                <h2>Push alerts for this session</h2>
               </div>
-              <span className="panel-note">Updated every 15 minutes</span>
+              <span className="panel-note">Backend generated, no database</span>
             </div>
-            <div className="region-list">
-              {regionsList.map((region) => (
-                <RegionCard
-                  key={region.name}
-                  region={region}
-                  isActive={region.name === currentRegion.name}
-                  onSelect={setSelectedRegion}
-                />
+            <div className="alert-stack">
+              {dashboard.notifications.map((notification) => (
+                <article className="alert-card" key={notification.id}>
+                  <SeverityPill level={notification.severity} />
+                  <strong>{notification.title}</strong>
+                  <p>{notification.message}</p>
+                  <span>{notification.region}</span>
+                </article>
               ))}
             </div>
+          </section>
+        ) : null}
+
+        <section className="hero-panel">
+          <div className="hero-copy">
+            <span className="eyebrow">SuryaRakshak</span>
+            <h1>Smart heatwave surveillance for Indian regions.</h1>
+            <p>
+              Track thermal stress, view district-level risk, and push clear advisories to field teams, health workers,
+              and residents before heat becomes a crisis.
+            </p>
+            <div className="hero-actions">
+              <button className="primary-action" onClick={() => setActiveTab('advisories')}>Live advisory feed</button>
+              <button className="secondary-action" onClick={() => setActiveTab('vulnerability')}>Escalation matrix</button>
+            </div>
           </div>
 
-          <div className="panel detail-panel">
-            <div className="panel-header">
-              <div>
-                <span className="eyebrow">Selected region</span>
-                <h2>{currentRegion.name || 'Select Region'}</h2>
-              </div>
-              {currentRegion.riskLevel ? <SeverityPill level={currentRegion.riskLevel} /> : null}
-            </div>
-            <div className="detail-grid">
-              <MetricCard label="Temperature" value={`${currentRegion.temperature ?? '--'}°C`} detail="2m screen temperature" />
-              <MetricCard label="Humidity" value={`${currentRegion.humidity ?? '--'}%`} detail="Relative humidity" />
-              <MetricCard label="Heat index" value={`${currentRegion.heatIndex ?? '--'}°C`} detail="Computed exposure load" />
-              <MetricCard label="Population at risk" value={currentRegion.populationAtRisk ?? 'N/A'} detail="Estimated vulnerable group" />
-            </div>
-            <p className="region-summary">{currentRegion.summary}</p>
+          <div className="hero-metrics">
+            <MetricCard label="Active alerts" value={dashboard.summary?.activeAlerts ?? 0} detail="Across monitored regions" />
+            <MetricCard label="High-risk districts" value={dashboard.summary?.highRiskDistricts ?? 0} detail="Requires intervention" />
+            <MetricCard label="Average heat index" value={`${dashboard.summary?.averageHeatIndex ?? 0}°C`} detail="Regional mean" />
           </div>
-        </div>
+        </section>
 
-        <aside className="side-column">
-          <div className="panel advisory-panel">
-            <div className="panel-header">
-              <div>
-                <span className="eyebrow">Advisory</span>
-                <h2>Recommended actions</h2>
-              </div>
-            </div>
-            <AdvisoryList items={currentRegion.advisories} />
-          </div>
-
-          {alertsList.length ? (
-            <div className="panel alert-panel">
+        <section className="dashboard-grid">
+          <div className="main-column">
+            <div className="panel region-panel">
               <div className="panel-header">
                 <div>
-                  <span className="eyebrow">Escalation</span>
-                  <h2>Priority alerts</h2>
+                  <span className="eyebrow">Regional watch</span>
+                  <h2>Monitored locations</h2>
                 </div>
+                <span className="panel-note">Updated every 15 minutes</span>
               </div>
-              <div className="alert-stack">
-                {alertsList.map((alert) => (
-                  <article className="alert-card" key={alert.id}>
-                    <SeverityPill level={alert.severity} />
-                    <strong>{alert.title}</strong>
-                    <p>{alert.message}</p>
-                    <span>{alert.region}</span>
-                  </article>
+              <div className="region-list">
+                {regionsList.map((region) => (
+                  <RegionCard
+                    key={region.name}
+                    region={region}
+                    isActive={region.name === currentRegion.name}
+                    onSelect={setSelectedRegion}
+                  />
                 ))}
               </div>
             </div>
-          ) : null}
-        </aside>
-      </section>
-    </main>
+
+            <div className="panel detail-panel">
+              <div className="panel-header">
+                <div>
+                  <span className="eyebrow">Selected region</span>
+                  <h2>{currentRegion.name || 'Select Region'}</h2>
+                </div>
+                {currentRegion.riskLevel ? <SeverityPill level={currentRegion.riskLevel} /> : null}
+              </div>
+              <div className="detail-grid">
+                <MetricCard label="Temperature" value={`${currentRegion.temperature ?? '--'}°C`} detail="2m screen temperature" />
+                <MetricCard label="Humidity" value={`${currentRegion.humidity ?? '--'}%`} detail="Relative humidity" />
+                <MetricCard label="Heat index" value={`${currentRegion.heatIndex ?? '--'}°C`} detail="Computed exposure load" />
+                <MetricCard label="Population at risk" value={currentRegion.populationAtRisk ?? 'N/A'} detail="Estimated vulnerable group" />
+              </div>
+              <p className="region-summary">{currentRegion.summary}</p>
+            </div>
+          </div>
+
+          <aside className="side-column">
+            <div className="panel advisory-panel">
+              <div className="panel-header">
+                <div>
+                  <span className="eyebrow">Advisory</span>
+                  <h2>Recommended actions</h2>
+                </div>
+              </div>
+              <AdvisoryList items={currentRegion.advisories} />
+            </div>
+
+            {alertsList.length ? (
+              <div className="panel alert-panel">
+                <div className="panel-header">
+                  <div>
+                    <span className="eyebrow">Escalation</span>
+                    <h2>Priority alerts</h2>
+                  </div>
+                </div>
+                <div className="alert-stack">
+                  {alertsList.map((alert) => (
+                    <article className="alert-card" key={alert.id}>
+                      <SeverityPill level={alert.severity} />
+                      <strong>{alert.title}</strong>
+                      <p>{alert.message}</p>
+                      <span>{alert.region}</span>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </aside>
+        </section>
+      </main>
+    );
+  };
+
+  return (
+    <div className="app-shell">
+      <Navbar activeTab={activeTab} onSelectTab={setActiveTab} />
+      {renderContent()}
+    </div>
   );
 }
