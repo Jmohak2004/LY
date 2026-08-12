@@ -52,7 +52,8 @@ export default function App() {
   useEffect(() => {
     let active = true;
 
-    fetch('/api/dashboard')
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    fetch(`${apiBaseUrl}/api/dashboard`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to load dashboard data');
