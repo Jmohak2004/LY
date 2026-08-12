@@ -117,6 +117,10 @@ async function buildRegionData(region) {
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (_request, response) => {
+  response.json({ status: 'ok', message: 'SuryaRakshak API is operational', endpoints: ['/api/health', '/api/dashboard', '/api/regions'] });
+});
+
 app.get('/api/health', (_request, response) => {
   response.json({ status: 'ok', service: 'suryarakshak-api' });
 });
