@@ -8,7 +8,11 @@ function SeverityPill({ level }) {
   return <span className={`pill pill-${level.toLowerCase()}`}>{level}</span>;
 }
 
-function AdvisoryList({ items }) {
+function AdvisoryList({ items = [] }) {
+  if (!items || !items.length) {
+    return <p className="panel-note">No active advisories for this region.</p>;
+  }
+
   return (
     <ul className="advisory-list">
       {items.map((item) => (
@@ -95,7 +99,9 @@ export default function App() {
     );
   }
 
-  const currentRegion = dashboard.regions.find((region) => region.name === selectedRegion) ?? dashboard.regions[0];
+  const regionsList = dashboard?.regions ?? [];
+  const currentRegion = regionsList.find((region) => region.name === selectedRegion) ?? regionsList[0] ?? {};
+  const alertsList = dashboard?.alerts ?? [];
 
   return (
     <main className="page-shell">
@@ -136,9 +142,9 @@ export default function App() {
         </div>
 
         <div className="hero-metrics">
-          <MetricCard label="Active alerts" value={dashboard.summary.activeAlerts} detail="Across monitored regions" />
-          <MetricCard label="High-risk districts" value={dashboard.summary.highRiskDistricts} detail="Requires intervention" />
-          <MetricCard label="Average heat index" value={`${dashboard.summary.averageHeatIndex}°C`} detail="Regional mean" />
+          <MetricCard label="Active alerts" value={dashboard.summary?.activeAlerts ?? 0} detail="Across monitored regions" />
+          <MetricCard label="High-risk districts" value={dashboard.summary?.highRiskDistricts ?? 0} detail="Requires intervention" />
+          <MetricCard label="Average heat index" value={`${dashboard.summary?.averageHeatIndex ?? 0}°C`} detail="Regional mean" />
         </div>
       </section>
 
@@ -153,7 +159,7 @@ export default function App() {
               <span className="panel-note">Updated every 15 minutes</span>
             </div>
             <div className="region-list">
-              {dashboard.regions.map((region) => (
+              {regionsList.map((region) => (
                 <RegionCard
                   key={region.name}
                   region={region}
@@ -168,15 +174,15 @@ export default function App() {
             <div className="panel-header">
               <div>
                 <span className="eyebrow">Selected region</span>
-                <h2>{currentRegion.name}</h2>
+                <h2>{currentRegion.name || 'Select Region'}</h2>
               </div>
-              <SeverityPill level={currentRegion.riskLevel} />
+              {currentRegion.riskLevel ? <SeverityPill level={currentRegion.riskLevel} /> : null}
             </div>
             <div className="detail-grid">
-              <MetricCard label="Temperature" value={`${currentRegion.temperature}°C`} detail="2m screen temperature" />
-              <MetricCard label="Humidity" value={`${currentRegion.humidity}%`} detail="Relative humidity" />
-              <MetricCard label="Heat index" value={`${currentRegion.heatIndex}°C`} detail="Computed exposure load" />
-              <MetricCard label="Population at risk" value={currentRegion.populationAtRisk} detail="Estimated vulnerable group" />
+              <MetricCard label="Temperature" value={`${currentRegion.temperature ?? '--'}°C`} detail="2m screen temperature" />
+              <MetricCard label="Humidity" value={`${currentRegion.humidity ?? '--'}%`} detail="Relative humidity" />
+              <MetricCard label="Heat index" value={`${currentRegion.heatIndex ?? '--'}°C`} detail="Computed exposure load" />
+              <MetricCard label="Population at risk" value={currentRegion.populationAtRisk ?? 'N/A'} detail="Estimated vulnerable group" />
             </div>
             <p className="region-summary">{currentRegion.summary}</p>
           </div>
@@ -193,24 +199,26 @@ export default function App() {
             <AdvisoryList items={currentRegion.advisories} />
           </div>
 
-          <div className="panel alert-panel">
-            <div className="panel-header">
-              <div>
-                <span className="eyebrow">Escalation</span>
-                <h2>Priority alerts</h2>
+          {alertsList.length ? (
+            <div className="panel alert-panel">
+              <div className="panel-header">
+                <div>
+                  <span className="eyebrow">Escalation</span>
+                  <h2>Priority alerts</h2>
+                </div>
+              </div>
+              <div className="alert-stack">
+                {alertsList.map((alert) => (
+                  <article className="alert-card" key={alert.id}>
+                    <SeverityPill level={alert.severity} />
+                    <strong>{alert.title}</strong>
+                    <p>{alert.message}</p>
+                    <span>{alert.region}</span>
+                  </article>
+                ))}
               </div>
             </div>
-            <div className="alert-stack">
-              {dashboard.alerts.map((alert) => (
-                <article className="alert-card" key={alert.id}>
-                  <SeverityPill level={alert.severity} />
-                  <strong>{alert.title}</strong>
-                  <p>{alert.message}</p>
-                  <span>{alert.region}</span>
-                </article>
-              ))}
-            </div>
-          </div>
+          ) : null}
         </aside>
       </section>
     </main>
