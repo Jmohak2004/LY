@@ -236,7 +236,7 @@ export function ResourcesPage() {
 
             <div className="resource-footer">
               <span>Emergency Hotline: <strong>{r.contacts}</strong></span>
-              <button className="secondary-action btn-sm">Get Directions</button>
+              <button className="secondary-action btn-sm" title="Get Directions to this Cooling Center">Get Directions</button>
             </div>
           </article>
         ))}
