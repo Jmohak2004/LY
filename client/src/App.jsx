@@ -16,6 +16,7 @@ function SeverityPill({ level }) {
 }
 
 function AdvisoryList({ items = [] }) {
+  ß
   if (!items || !items.length) {
     return <p className="panel-note">No active advisories for this region.</p>;
   }
@@ -73,15 +74,16 @@ function Navbar({ activeTab, onSelectTab }) {
       </div>
       <nav className="nav-links">
         {tabs.map((tab) => (
-          <button
+          <a
             key={tab.id}
+            href={tab.id === 'dashboard' ? '/' : `/${tab.id}`}
             className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => onSelectTab(tab.id)}
+            onClick={(e) => { e.preventDefault(); onSelectTab(tab.id); }}
             title={`View ${tab.label}`}
             aria-label={`Navigate to ${tab.label}`}
           >
             {tab.label}
-          </button>
+          </a>
         ))}
       </nav>
     </header>
@@ -184,8 +186,8 @@ export default function App() {
               and residents before heat becomes a crisis.
             </p>
             <div className="hero-actions">
-              <button className="primary-action" title="View Live Heat Advisory Feed" onClick={() => setActiveTab('advisories')}>View Live Advisory Feed</button>
-              <button className="secondary-action" title="View Heat Risk Escalation Matrix" onClick={() => setActiveTab('vulnerability')}>View Escalation Matrix</button>
+              <a href="/advisories" className="primary-action" title="View Live Heat Advisory Feed" onClick={(e) => { e.preventDefault(); setActiveTab('advisories'); }}>View Live Advisory Feed</a>
+              <a href="/vulnerability" className="secondary-action" title="View Heat Risk Escalation Matrix" onClick={(e) => { e.preventDefault(); setActiveTab('vulnerability'); }}>View Escalation Matrix</a>
             </div>
           </div>
 

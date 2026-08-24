@@ -1,4 +1,20 @@
 import { useEffect, useState } from 'react';
+import {
+  ComposedChart,
+  Line,
+  Area,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart
+} from 'recharts';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -223,6 +239,18 @@ export function ResourcesPage() {
             </div>
             <h2>{r.name}</h2>
             <p className="resource-address">{r.address}</p>
+            
+            <div className="map-container" style={{ margin: '1rem 0', borderRadius: '8px', overflow: 'hidden' }}>
+              <iframe
+                width="100%"
+                height="150"
+                frameBorder="0"
+                style={{ border: 0 }}
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps?q=${encodeURIComponent(r.address)}&output=embed`}
+                allowFullScreen
+              ></iframe>
+            </div>
 
             <div className="occupancy-wrap">
               <div className="occupancy-label">
@@ -236,7 +264,7 @@ export function ResourcesPage() {
 
             <div className="resource-footer">
               <span>Emergency Hotline: <strong>{r.contacts}</strong></span>
-              <button className="secondary-action btn-sm" title="Get Directions to this Cooling Center">Get Directions</button>
+              <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(r.address)}`} target="_blank" rel="noopener noreferrer" className="secondary-action btn-sm" title="Get Directions to this Cooling Center">Get Directions</a>
             </div>
           </article>
         ))}
@@ -246,37 +274,120 @@ export function ResourcesPage() {
 }
 
 export function AnalyticsPage() {
+  const anomalyData = [
+    { day: 'D1', actual: 38, baseline: 35 },
+    { day: 'D2', actual: 41, baseline: 35.5 },
+    { day: 'D3', actual: 44, baseline: 36 },
+    { day: 'D4', actual: 42, baseline: 36.5 },
+    { day: 'D5', actual: 45, baseline: 36 },
+    { day: 'D6', actual: 47, baseline: 37 },
+    { day: 'D7', actual: 43, baseline: 37 },
+    { day: 'D8', actual: 40, baseline: 36.5 },
+    { day: 'D9', actual: 42, baseline: 36 },
+    { day: 'D10', actual: 46, baseline: 37.5 },
+    { day: 'D11', actual: 48, baseline: 38 },
+    { day: 'D12', actual: 45, baseline: 37.5 },
+    { day: 'D13', actual: 41, baseline: 37 },
+    { day: 'D14', actual: 39, baseline: 36.5 },
+    { day: 'D15', actual: 42, baseline: 37 },
+  ];
+
+  const vulnerabilityData = [
+    { name: 'Extreme Risk', value: 18, color: '#ef4444' },
+    { name: 'High Risk', value: 44, color: '#f97316' },
+    { name: 'Moderate Risk', value: 50, color: '#eab308' },
+    { name: 'Low Risk', value: 30, color: '#22c55e' }
+  ];
+
+  const trendData = [
+    { day: 'Mon', heatIndex: 39 },
+    { day: 'Tue', heatIndex: 42 },
+    { day: 'Wed', heatIndex: 44 },
+    { day: 'Thu', heatIndex: 43 },
+    { day: 'Fri', heatIndex: 46 },
+    { day: 'Sat', heatIndex: 48 },
+    { day: 'Sun', heatIndex: 45 },
+  ];
+
   return (
     <div className="page-shell">
       <header className="page-header">
         <span className="eyebrow">Climate Intelligence</span>
         <h1>Heat Index Analytics & Historical Comparative Analysis</h1>
-        <p>Multi-year satellite thermal telemetry provided by Open-Meteo & NASA POWER RE Community datasets.</p>
+        <p>Interactive multi-year satellite thermal telemetry provided by Open-Meteo & NASA POWER RE Community datasets.</p>
       </header>
 
       <div className="dashboard-grid">
-        <div className="main-column">
+        <div className="main-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <section className="panel">
             <h2>30-Day Heat Anomaly Comparison</h2>
-            <p className="panel-note">Observed surface temperature vs 10-year baseline mean (°C)</p>
-            <div className="chart-placeholder">
-              <div className="chart-bars">
-                {[38, 41, 44, 42, 45, 47, 43, 40, 42, 46, 48, 45, 41, 39, 42].map((val, idx) => (
-                  <div className="chart-bar-group" key={idx}>
-                    <div className="bar-actual" style={{ height: `${val * 2}px` }} title={`Actual: ${val}°C`} />
-                    <div className="bar-baseline" style={{ height: `${(val - 3) * 2}px` }} title="Baseline" />
-                  </div>
-                ))}
-              </div>
-              <div className="chart-legend">
-                <span><i className="legend-dot actual-dot" /> 2026 Observed Heat Index</span>
-                <span><i className="legend-dot baseline-dot" /> 10-Year Historical Mean</span>
-              </div>
+            <p className="panel-note" style={{ marginBottom: '1rem' }}>Observed surface temperature vs 10-year baseline mean (°C)</p>
+            <div style={{ width: '100%', height: '300px' }}>
+              <ResponsiveContainer>
+                <ComposedChart data={anomalyData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                  <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 5', 'dataMax + 5']} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
+                  <Legend verticalAlign="top" height={36} iconType="circle" />
+                  <Bar dataKey="actual" name="2026 Observed Heat Index" fill="#f97316" radius={[4, 4, 0, 0]} />
+                  <Line type="monotone" dataKey="baseline" name="10-Year Historical Mean" stroke="#38bdf8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
+          <section className="panel">
+            <h2>7-Day Forward Thermal Trend Projection</h2>
+            <p className="panel-note" style={{ marginBottom: '1rem' }}>Predicted Heat Index severity mapping (°C)</p>
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer>
+                <AreaChart data={trendData} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
+                  <defs>
+                    <linearGradient id="colorHeat" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[30, 50]} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
+                  <Area type="monotone" dataKey="heatIndex" name="Forecasted Heat Index" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorHeat)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </section>
         </div>
 
-        <aside className="side-column">
+        <aside className="side-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <section className="panel">
+            <h2>Vulnerability Distribution</h2>
+            <p className="panel-note" style={{ marginBottom: '1rem' }}>District-wise risk tier breakdown</p>
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={vulnerabilityData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {vulnerabilityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#f8fafc' }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
           <section className="panel">
             <h2>Data Sources & Methodology</h2>
             <ul className="advisory-list">
